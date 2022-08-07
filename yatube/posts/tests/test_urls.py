@@ -103,7 +103,7 @@ class PostURLTests(TestCase):
             reverse(
                 'posts:group_list', kwargs={
                     'slug': self.group.slug
-                } 
+                }
             ): 'posts/group_list.html',
             reverse(
                 'posts:profile', kwargs={

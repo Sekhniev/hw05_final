@@ -13,6 +13,7 @@ class PostForm(ModelForm):
         }
         fields = ['group', 'text', 'image']
 
+
 class CommentForm(ModelForm):
     class Meta:
         model = Comment

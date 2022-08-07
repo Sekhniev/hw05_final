@@ -30,7 +30,6 @@ class PostTests(TestCase):
                 slug='test_slug2',
                 description='test_group_2_description'))
 
-
     def setUp(self):
         self.guest_client = Client()
         self.user = User.objects.create_user(username='leo')
