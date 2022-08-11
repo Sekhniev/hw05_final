@@ -5,7 +5,6 @@ from django.urls import reverse
 
 from http import HTTPStatus
 from urllib.parse import urljoin
-from itertools import count
 
 from ..models import Group, Post
 

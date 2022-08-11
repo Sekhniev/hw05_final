@@ -1,10 +1,9 @@
-from itertools import count
-from venv import create
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 from django import forms
 from django.core.cache import cache
+
 from posts.models import Post, Group, Follow
 from posts.constants import limitation
 
