@@ -20,13 +20,15 @@ class PostModelTest(TestCase):
             text='Тестовая запись для создания нового поста',
         )
 
-    def test_models_have_correct_object_names(self):
-        post = PostModelTest.post
-        expected_object_name = post.text[:15]
-        self.assertEqual(expected_object_name, str(post))
-
-    def test_object_name_is_title_field(self):
-        '''__str__  group - строка с group.title.'''
+    def test_group_str(self):
         group = PostModelTest.group
-        expected_object_name = group.title[:15]
-        self.assertEqual(expected_object_name, str(group))
+        post = PostModelTest.post
+        expected_group_name = group.title
+        expected_post_name = post.text[:15]
+        objects = {
+            "group": (group, expected_group_name),
+            "post": (post, expected_post_name),
+        }
+        for value, expected in objects.items():
+            with self.subTest(value=value):
+                self.assertEqual(expected[1], str(expected[0]))

@@ -1,9 +1,12 @@
+from itertools import count
+from venv import create
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 from django import forms
 from django.core.cache import cache
 from posts.models import Post, Group, Follow
+from posts.constants import limitation
 
 
 User = get_user_model()
@@ -14,6 +17,16 @@ class PostTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
 
+        cls.group = Group.objects.create(
+            title='Лев Толстой',
+            slug='tolstoy',
+            description='Группа Льва Толстого',
+        )
+        cls.author = User.objects.create_user(
+            username='AuthorForPosts'
+        )
+
+        cls.user = User.objects.create_user(username='leo')
         cls.post = Post.objects.create(
             author=User.objects.create_user(username='test_name1'),
             text='Тестовая запись для создания 1 поста',
@@ -32,7 +45,6 @@ class PostTests(TestCase):
 
     def setUp(self):
         self.guest_client = Client()
-        self.user = User.objects.create_user(username='leo')
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
@@ -111,13 +123,9 @@ class PostTests(TestCase):
 
     def test_cache_index(self):
         response = self.authorized_client.get(reverse('posts:index'))
-        form_data_for_cache = {
-            'text': 'Проверка кэша',
-        }
-        self.authorized_client.post(
-            reverse('posts:post_create'),
-            data=form_data_for_cache,
-            follow=True
+        Post.objects.create(
+            text='Проверка кэша',
+            author=PostTests.author,
         )
         response = self.authorized_client.get(reverse('posts:index'))
         self.assertNotContains(response, 'Проверка кэша')
@@ -125,25 +133,38 @@ class PostTests(TestCase):
         response = self.authorized_client.get(reverse('posts:index'))
         self.assertContains(response, 'Проверка кэша')
 
+    def test_login_user_follow(self):
+        """
+        Авторизованный пользователь может подписываться
+        на других пользователей
+        """
+        followers_before = Follow.objects.count()
+
+        self.authorized_client.get(
+            reverse('posts:profile_follow', args=[self.author]))
+        followers_after = Follow.objects.count()
+        self.assertEqual(followers_after, followers_before + 1)
+
     def test_login_user_unfollow(self):
-        """Авторизованный пользователь может подписываться
-        на других пользователей, а также отписываться"""
-        followers_before = len(
-            Follow.objects.all().filter(id=self.post.id))
-
+        """
+        Авторизованный пользователь может отписываться
+        от других пользователей
+        """
+        followers_before = Follow.objects.count()
         self.authorized_client.get(
-            reverse('posts:profile_follow', args=[self.post.id]))
+            reverse('posts:profile_follow', args=[self.author]))
         self.authorized_client.get(
-            reverse('posts:profile_unfollow', args=[self.post.id]))
+            reverse('posts:profile_unfollow', args=[self.author]))
 
-        followers_after_unfollow = len(
-            Follow.objects.all().filter(id=self.post.id))
+        followers_after_unfollow = Follow.objects.count()
         self.assertEqual(followers_after_unfollow, followers_before)
 
     def test_follow_index(self):
-        """Новая запись пользователя появляется в ленте тех,
+        """
+        Новая запись пользователя появляется в ленте тех,
         кто на него подписан и не появляется в ленте тех,
-        кто не подписан на него"""
+        кто не подписан на него
+        """
         response = self.authorized_client.get(reverse('posts:follow_index'))
 
         self.authorized_client.get(
@@ -191,7 +212,7 @@ class PaginatorViewsTest(TestCase):
         for tested_url in list_urls.keys():
             response = self.client.get(tested_url)
             self.assertEqual(
-                len(response.context.get('page_obj').object_list), 10)
+                len(response.context.get('page_obj').object_list), limitation)
 
     def test_second_page_contains_three_posts(self):
         list_urls = {

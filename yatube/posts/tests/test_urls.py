@@ -1,10 +1,12 @@
 from django.test import TestCase, Client
-from http import HTTPStatus
-from urllib.parse import urljoin
-
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
+
+from http import HTTPStatus
+from urllib.parse import urljoin
+from itertools import count
+
 from ..models import Group, Post
 
 User = get_user_model()
@@ -39,8 +41,10 @@ class PostURLTests(TestCase):
         )
 
     def test_create_url_redirect(self):
-        """Приватные адреса не доступны
-        для неавторизованных пользователей"""
+        """
+        Приватные адреса не доступны
+        для неавторизованных пользователей
+        """
         private_pages_names = {
             reverse('posts:post_create'),
             reverse(
@@ -54,7 +58,8 @@ class PostURLTests(TestCase):
                 self.assertEqual(response.status_code, HTTPStatus.FOUND)
 
     def test_redirect_anonymous_on_login(self):
-        """Страница /create/ перенаправит анонимного пользователя
+        """
+        Страница /create/ перенаправит анонимного пользователя
         на страницу логина.
         """
         response = self.guest_client.get(reverse('posts:post_create'))
@@ -62,35 +67,35 @@ class PostURLTests(TestCase):
         self.assertRedirects(response, url)
 
     def test_redirect_anon_username_edit_post_url(self):
-        """Проверка редиректа анонимного пользователя, при обращении
-        к странице редактирования поста"""
-        total_number_of_id = len(
-            Post.objects.filter().values_list('id',
-                                              flat=True))
+        """
+        Проверка редиректа анонимного пользователя, при обращении
+        к странице редактирования поста
+        """
+        total_number_of_id = Post.objects.count()
         url = reverse('posts:post_edit',
                       kwargs={'post_id': total_number_of_id})
         response = self.guest_client.get(url)
         self.assertRedirects(response, '/auth/login/?next=' + url)
 
     def test_redirect_author_username_edit_post_url(self):
-        """Проверка доступности страницы редактирования поста, при обращении
-        автора"""
+        """
+        Проверка доступности страницы редактирования поста, при обращении
+        автора
+        """
         self.authorized_client = Client()
         self.authorized_client.login()
-        total_number_of_id = len(
-            Post.objects.filter().values_list('id',
-                                              flat=True))
+        total_number_of_id = Post.objects.count()
         url = reverse('posts:post_edit',
                       kwargs={'post_id': total_number_of_id})
         response = self.authorized_user.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_redirect_not_author_username_edit_post_url(self):
-        """Проверка редиректа при обращении к странице редактирования поста,
-        авторизированным пользователем, не автором"""
-        total_number_of_id = len(
-            Post.objects.filter().values_list('id',
-                                              flat=True))
+        """
+        Проверка редиректа при обращении к странице редактирования поста,
+        авторизированным пользователем, не автором
+        """
+        total_number_of_id = Post.objects.count()
         url = reverse('posts:post_edit',
                       kwargs={'post_id': total_number_of_id})
         response = self.authorized_user.get(url, follow=True)
@@ -169,5 +174,9 @@ class PostURLTests(TestCase):
                 self.assertEqual(status_code, response)
 
     def test_page_404(self):
+        """
+        Если страница не найдена на сайте, возвращает код ответа 404
+        """
         response = self.guest_client.get('/password/')
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertTemplateUsed(response, 'core/404.html')

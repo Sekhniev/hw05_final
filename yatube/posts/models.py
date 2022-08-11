@@ -1,5 +1,5 @@
-from django.db import models
 from django.contrib.auth import get_user_model
+from django.db import models
 
 User = get_user_model()
 
@@ -15,7 +15,7 @@ class Group(models.Model):
 
 class Post(models.Model):
     text = models.TextField(
-        'Текст поста',
+        verbose_name='Текст',
         help_text='Введите текст поста'
     )
     pub_date = models.DateTimeField(
@@ -38,9 +38,11 @@ class Post(models.Model):
         help_text='Выберите группу'
     )
     image = models.ImageField(
-        'Картинка',
         upload_to='posts/',
-        blank=True
+        blank=True,
+        null=True,
+        verbose_name='Изображение',
+        help_text='Выберите изображение'
     )
 
     class Meta:
@@ -89,4 +91,7 @@ class Follow(models.Model):
     )
 
     class Meta:
-        unique_together = ('user', 'author',)
+        constraints = (models.UniqueConstraint(fields=('user', 'author'),
+                                               name='Пара уникальных значений')
+                       )
+        verbose_name_plural = 'Пользователи / Подписки'

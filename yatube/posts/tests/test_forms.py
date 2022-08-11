@@ -1,18 +1,20 @@
 from django.contrib.auth import get_user_model
-from ..models import Post, Group, Comment
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
-from http import HTTPStatus
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.conf import settings
+
+from http import HTTPStatus
 import tempfile
 import shutil
-from django.core.files.uploadedfile import SimpleUploadedFile
+
+from ..models import Post, Group, Comment
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
-
 User = get_user_model()
 
 
+@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class PostCreateFormTests(TestCase):
     @classmethod
     def setUpClass(cls):
@@ -67,20 +69,20 @@ class PostCreateFormTests(TestCase):
             'group': self.group.id,
             'image': uploaded,
         }
-
         response = self.authorized_client.post(reverse('posts:post_create'),
                                                data=form_data,
                                                follow=True)
-        post = Post.objects.get(id=self.group.id)
+        post = Post.objects.latest('id')
         self.assertEqual(Post.objects.count(), post_count + 1)
-        self.assertEqual(post.text, 'Текст из формы')
+        self.assertEqual(post.text, 'Тестовый текст')
         self.assertEqual(post.author, self.user)
         self.assertEqual(post.group, self.group)
+        self.assertEqual(post.image, 'posts/small.gif')
         self.assertRedirects(response, reverse('posts:profile', kwargs={
             'username': 'leo'}))
-        self.assertEqual(post.image, post.image)
         self.assertFalse(Post.objects.filter(
-            text='Пост от неавторизованного пользователя').exists())
+            text='Пост от неавторизованного пользователя').exists()
+        )
 
     def test_authorized_user_create_comment(self):
         """Проверка создания коментария авторизированным клиентом."""

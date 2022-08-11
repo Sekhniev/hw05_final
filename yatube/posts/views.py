@@ -1,8 +1,11 @@
-from django.core.paginator import Paginator
-from django.shortcuts import render, get_object_or_404, redirect
-from .models import Group, Post, User, Follow
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+from django.shortcuts import render, get_object_or_404
+from django.shortcuts import redirect
+
+from .models import Post, Group, User, Follow
 from .forms import PostForm, CommentForm
+from .utils import Paginator
 
 
 def index(request):
@@ -110,7 +113,8 @@ def get_page(posts, request):
 def follow_index(request):
     template = 'posts/follow.html'
     posts = Post.objects.filter(
-        author__following__user=request.user)
+        author__following__user=request.user
+    )
     page_obj = get_page(posts, request)
     context = {
         'page_obj': page_obj,
@@ -123,14 +127,13 @@ def follow_index(request):
 def profile_follow(request, username):
     author = get_object_or_404(User, username=username)
     if author != request.user and not Follow.objects.filter(
-            user=request.user, author=author).exists():
-        Follow.objects.create(author=author, user=request.user)
+            user=request.user, author=author):
+        Follow.objects.get_or_create(author=author, user=request.user)
     return redirect('posts:profile', username)
 
 
 @login_required
 def profile_unfollow(request, username):
-    following = get_object_or_404(User, username=username)
-    follower = get_object_or_404(Follow, author=following, user=request.user)
-    follower.delete()
-    return redirect('posts:profile', username=username)
+    Follow.objects.filter(
+        user=request.user, author__username=username).delete()
+    return redirect("posts:profile", username)

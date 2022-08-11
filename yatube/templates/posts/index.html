@@ -10,7 +10,6 @@
   <ul>
     <li>
         Автор: <a href="{% url 'posts:profile' post.author %}">
-          {% if post.author.get_full_name %}{{ post.author.get_full_name }}{% else %}{{ post.author }}{% endif %}
         </a>
     </li>
     <li>

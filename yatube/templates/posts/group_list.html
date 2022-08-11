@@ -17,11 +17,9 @@
       </li>
     </ul>
     <p>{{ post.text }}</p>   
-    <a href="{% url 'posts:index' %}">На главную</a>
     {% if not forloop.last %}<hr>{% endif %}
   {% endfor %}     
       </article> 
     <div>     
     </main>       
 {% endblock %} 
-  </body>
