@@ -80,9 +80,6 @@ class PostCreateFormTests(TestCase):
         self.assertEqual(post.image, 'posts/small.gif')
         self.assertRedirects(response, reverse('posts:profile', kwargs={
             'username': 'leo'}))
-        self.assertFalse(Post.objects.filter(
-            text='Пост от неавторизованного пользователя').exists()
-        )
 
     def test_authorized_user_create_comment(self):
         """Проверка создания коментария авторизированным клиентом."""
