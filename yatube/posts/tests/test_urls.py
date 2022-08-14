@@ -1,10 +1,9 @@
-from django.test import TestCase, Client
+from http import HTTPStatus
+from urllib.parse import urljoin
+
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
-
-from http import HTTPStatus
-from urllib.parse import urljoin
 
 from ..models import Group, Post
 
