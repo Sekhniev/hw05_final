@@ -32,4 +32,5 @@ class PostModelTest(TestCase):
         }
         for value in objects.items():
             with self.subTest(value=value):
-                self.assertEqual(expected_group_name[1], str(expected_post_name[1]))
+                self.assertEqual(
+                    expected_group_name[1], str(expected_post_name[1]))
