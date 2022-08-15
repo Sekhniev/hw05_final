@@ -24,13 +24,10 @@ class PostModelTest(TestCase):
     def test_group_str(self):
         group = PostModelTest.group
         post = PostModelTest.post
-        expected_group_name = group.title
-        expected_post_name = post.text[:15]
         objects = {
-            'expected_group_name': group,
-            'expected_post_name': post
+            str(group): group.title,
+            str(post): post.text[:15]
         }
-        for value in objects.items():
+        for value, expected in objects.items():
             with self.subTest(value=value):
-                self.assertEqual(
-                    expected_group_name[1], str(expected_post_name[1]))
+                self.assertEqual(value, expected)
